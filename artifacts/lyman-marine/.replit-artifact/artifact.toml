@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Lyman Marine"
+description = "A polished marine editorial and boat discovery website rebuilt from the supplied Lyman Marine project, with focused article reading views and beginner-friendly boating guidance."
+version = "1.0.0"
+id = "artifacts/lyman-marine"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23704
+
+[services.development]
+run = "pnpm --filter @workspace/lyman-marine run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/lyman-marine", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/lyman-marine/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23704"
+BASE_PATH = "/"
