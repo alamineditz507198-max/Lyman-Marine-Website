@@ -1,0 +1,118 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: marine-conditions
+    description: Live U.S. boating weather and marine conditions
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /marine-conditions/search:
+    get:
+      operationId: searchMarineLocations
+      tags: [marine-conditions]
+      summary: Search U.S. boating locations
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 2
+      responses:
+        "200":
+          description: Matching locations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarineLocationSearchResponse"
+        "400":
+          description: Invalid search
+  /marine-conditions:
+    get:
+      operationId: getMarineConditions
+      tags: [marine-conditions]
+      summary: Get fresh live marine conditions
+      parameters:
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Live marine conditions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarineConditions"
+        "404":
+          description: Location not found
+        "502":
+          description: Upstream data unavailable
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    MarineLocation:
+      type: object
+      properties:
+        name: { type: string }
+        label: { type: string }
+        state: { type: string }
+        latitude: { type: number }
+        longitude: { type: number }
+      required: [name, label, latitude, longitude]
+    MarineLocationSearchResponse:
+      type: object
+      properties:
+        locations:
+          type: array
+          items: { $ref: "#/components/schemas/MarineLocation" }
+      required: [locations]
+    MarineConditions:
+      type: object
+      additionalProperties: true
+      properties:
+        location: { $ref: "#/components/schemas/MarineLocation" }
+        fetchedAt: { type: string, format: date-time }
+        current: { type: object, additionalProperties: true }
+        waves: { type: object, additionalProperties: true }
+        water: { type: object, additionalProperties: true }
+        tide: { type: object, nullable: true, additionalProperties: true }
+        alerts:
+          type: array
+          items: { type: object, additionalProperties: true }
+        forecast:
+          type: array
+          items: { type: object, additionalProperties: true }
+        rating: { type: object, additionalProperties: true }
+        sources:
+          type: array
+          items: { type: object, additionalProperties: true }
+      required: [location, fetchedAt, current, waves, water, tide, alerts, forecast, rating, sources]
+
